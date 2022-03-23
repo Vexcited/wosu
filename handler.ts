@@ -10,11 +10,11 @@ export const handler: Handler = (req, res, next) => {
 }
 */
 
-import express from 'express';
+import express from "express";
 const app = express();
 
 app.get("/api", (req, res) => {
-	res.json({});
+  res.json({});
 });
 
-export const handler = app
+export const handler = app;
