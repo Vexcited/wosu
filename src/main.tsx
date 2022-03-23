@@ -15,6 +15,7 @@ import {
 
 import HomePage from "@/pages/index";
 import NotFoundPage from "@/pages/404";
+import SettingsPage from "./pages/settings";
 import SinglePlayerMenuPage from "@/pages/singleplayer/index";
 import MultiPlayerMenuPage from "@/pages/multiplayer/index";
 
@@ -26,6 +27,7 @@ function AppRouter () {
 
         <Route path="singleplayer" element={<SinglePlayerMenuPage />} />
         <Route path="multiplayer" element={<MultiPlayerMenuPage />} />
+        <Route path="settings" element={<SettingsPage />} />
 
         <Route path="*" element={<NotFoundPage />} />
       </Routes>

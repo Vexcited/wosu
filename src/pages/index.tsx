@@ -48,6 +48,10 @@ export default function HomePage () {
           iconElement={<FaUserFriends />}
         />
       </div>
+
+      <Link className="px-6 py-2 rounded-full focus:bg-opacity-80 hover:bg-opacity-80 transition-colors bg-purple-500 text-purple-50" to="settings">
+        Global Settings
+      </Link>
     </main>
   );
 }
