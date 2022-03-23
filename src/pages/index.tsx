@@ -36,7 +36,7 @@ export default function HomePage () {
       <div className="grid place-items-center gap-2 mx-4">
         <HomeMenuSelectorItem
           to="/singleplayer"
-          title="Single Player"
+          title="Singleplayer"
           description="Import maps and play them !"
           iconElement={<FaPlay />}
         />
