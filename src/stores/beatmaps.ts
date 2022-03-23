@@ -2,22 +2,22 @@ import create from "zustand";
 import localforage from "localforage";
 
 export interface Beatmap {
-  id: string;
-  name: string;
-  creator: string;
+  set_id: string;
+  publisher: string;
   levels: {
-    /** Stars of the level. */
-    difficulty: number;
-    /** The name of the level. */
+    id: string;
     name: string;
+    path: string;
   }[];
-  files: Uint8Array[];
+  files: {
+    [path: string]: ArrayBuffer;
+  };
 }
 
 export type BeatmapsStore = {
   beatmaps: Beatmap[];
   setBeatmap: (beatmaps: Beatmap) => Promise<void>;
-  deleteBeatmap: (id: string) => Promise<void>;
+  deleteBeatmap: (set_id: string) => Promise<void>;
 };
 
 export const beatmapsStorage = localforage.createInstance({
@@ -28,10 +28,10 @@ export const beatmapsStorage = localforage.createInstance({
 export const useBeatmapsStore = create<BeatmapsStore>((set, get) => ({
   beatmaps: [],
   setBeatmap: async (beatmap: Beatmap) => {
-    console.group(`[stores/beatmaps] Configuring beatmap "${beatmap.id}".`);
+    console.group(`[stores/beatmaps] Configuring beatmap "${beatmap.set_id}".`);
 
     // Updating persist store.
-    await beatmapsStorage.setItem(beatmap.id, beatmap);
+    await beatmapsStorage.setItem(beatmap.set_id, beatmap);
     console.info("[localForage] Beatmap configured.");
 
     const beatmaps = get().beatmaps;
@@ -42,9 +42,9 @@ export const useBeatmapsStore = create<BeatmapsStore>((set, get) => ({
     console.info("[zustand] Beatmap configured.");
     console.groupEnd();
   },
-  deleteBeatmap: async (id: string) => {
+  deleteBeatmap: async (set_id: string) => {
     set(() => ({
-      beatmaps: get().beatmaps.filter(beatmap => beatmap.id !== id)
+      beatmaps: get().beatmaps.filter(beatmap => beatmap.set_id !== set_id)
     }));
   }
 }));

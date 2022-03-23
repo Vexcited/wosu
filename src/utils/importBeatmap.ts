@@ -1,10 +1,60 @@
+import type { Beatmap } from "@/stores/beatmaps";
+
 import JSZip from "jszip";
 
 const beatmapHandler = async (oszFile: ArrayBuffer) => {
   const zip = new JSZip();
 
-  const beatmap = await zip.loadAsync(oszFile);
-  console.log(beatmap.files);
+  // Get metadata of the beatmap.
+  const beatmap_data = await zip.loadAsync(oszFile);
+  const beatmap_object: Beatmap = {
+    set_id: "",
+    publisher: "",
+    levels: [],
+    files: {}
+  };
+
+  for (const [path, data] of Object.entries(beatmap_data.files)) {
+    const file = await data.async("arraybuffer");
+    beatmap_object.files[path] = file;
+
+    if (path.endsWith(".osu")) {
+      console.log("Parsing `.osu` file.");
+
+      const osu_data = await data.async("text");
+      const osu_level_object: Beatmap["levels"][0] = {
+        id: "",
+        name: "",
+        path
+      };
+
+      const lines = osu_data.split("\n");
+      for (const line of lines) {
+        const [key, value] = line.split(":").map(a => a.trim());
+
+        switch (key) {
+        case "BeatmapSetID":
+          beatmap_object.set_id = value;
+          break;
+        case "BeatmapID":
+          osu_level_object.id = value;
+          break;
+        case "Version":
+          osu_level_object.name = value;
+          break;
+        case "Creator":
+          beatmap_object.publisher = value;
+          break;
+        }
+      }
+
+      // Add the level to the beatmap.
+      beatmap_object.levels.push(osu_level_object);
+      console.info("Finished parsing `.osu` file.");
+    }
+  }
+
+  console.log(beatmap_object);
 };
 
 const importBeatmapHandler = async (evt: Event) => {
