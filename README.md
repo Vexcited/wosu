@@ -4,6 +4,8 @@
 
 ## Development
 
+### Getting Started
+
 **Yarn** is recommended instead of NPM.
 
 ```bash
@@ -18,3 +20,11 @@ yarn build
 
 # Start the builded app.
 yarn serve 
+```
+
+### API
+
+API handler is an Express app used with Vite using `vite-plugin-mix`.
+It is only used to handle multiplayer matchs' states.
+
+#### `/api/matchs`

@@ -6,7 +6,7 @@ import { resolve } from "path";
 export default defineConfig({
   plugins: [
     /** Add backend handler to Vite. */
-    mix({ handler: "./handler.ts" }),
+    mix({ handler: "./api/index.ts" }),
     react()
   ],
   resolve: {
