@@ -1,10 +1,9 @@
 # osu-web-player
 
-> A web osu! beatmap player with multiplayer. Made for Hackathon of Replit.
+> A web osu! beatmap player with multiplayer.
 
 ## Development
 
-I use Replit to deploy the app with the backend.
 **Yarn** is recommended instead of NPM.
 
 ```bash
