@@ -1,48 +1,68 @@
 import create from "zustand";
 import localforage from "localforage";
 
-export interface Beatmap {
+interface Beatmap {
   set_id: string;
+}
+
+export interface BeatmapMetadata extends Beatmap {
   publisher: string;
   levels: {
     id: string;
     name: string;
     path: string;
   }[];
+}
+
+export interface BeatmapFiles extends Beatmap {
   files: {
     [path: string]: ArrayBuffer;
   };
 }
 
-export type BeatmapsStore = {
-  beatmaps: Beatmap[];
-  setBeatmap: (beatmaps: Beatmap) => Promise<void>;
+type BeatmapsStore = {
+  /** List all of the beatmaps' metadata. */
+  beatmaps: BeatmapMetadata[];
+  /** Load a beatmap metadata to memory. */
+  loadBeatmap: (set_id: string) => Promise<void>;
+  /** Remove beatmap from memory. */
   deleteBeatmap: (set_id: string) => Promise<void>;
 };
 
-export const beatmapsStorage = localforage.createInstance({
-  storeName: "osu-storage",
-  name: "beatmaps"
+// In this store, we only store metadatas of beatmaps.
+export const beatmapsMetadataStorage = localforage.createInstance({
+  name: "osu-storage",
+  storeName: "beatmaps-metadata"
+});
+
+// In this store, we save every files of each beatmaps
+// so we only load them when we need.
+export const beatmapsFilesStorage = localforage.createInstance({
+  name: "osu-storage",
+  storeName: "beatmaps-files"
 });
 
 export const useBeatmapsStore = create<BeatmapsStore>((set, get) => ({
   beatmaps: [],
-  setBeatmap: async (beatmap: Beatmap) => {
-    console.group(`[stores/beatmaps] Configuring beatmap "${beatmap.set_id}".`);
+  loadBeatmap: async (set_id) => {
+    console.info(`[stores/beatmaps] Loaded beatmap metadata "${set_id}" to memory.`);
 
-    // Updating persist store.
-    await beatmapsStorage.setItem(beatmap.set_id, beatmap);
-    console.info("[localForage] Beatmap configured.");
+    // Get the beatmap from storage.
+    const metadata: BeatmapMetadata | null = await beatmapsMetadataStorage.getItem(set_id);
+
+    if (!metadata) return console.error(
+      `[stores/beatmaps] Error while loading beatmap "${set_id}": metadata is null.`
+    );
 
     const beatmaps = get().beatmaps;
-    beatmaps.push(beatmap);
+    beatmaps.push(metadata);
     
-    // Updating local store.
+    console.info(`[stores/beatmaps] Loaded "${set_id}" !`);
     set(() => ({ beatmaps }));
-    console.info("[zustand] Beatmap configured.");
-    console.groupEnd();
   },
   deleteBeatmap: async (set_id: string) => {
+    console.info(`[stores/beatmaps] Removed beatmap metadata of "${set_id}" from memory.`);
+
     set(() => ({
       beatmaps: get().beatmaps.filter(beatmap => beatmap.set_id !== set_id)
     }));

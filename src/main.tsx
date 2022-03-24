@@ -8,7 +8,7 @@ import ReactDOM from "react-dom";
 
 import {
   useBeatmapsStore,
-  beatmapsStorage
+  beatmapsMetadataStorage
 } from "@/stores/beatmaps";
 
 import {
@@ -42,16 +42,18 @@ function AppRouter () {
 
 /** Effects and triggers on first load. */
 function App () {
+  const loadBeatmapToMemory = useBeatmapsStore(state => state.loadBeatmap);
+
   React.useEffect(() => {
     (async () => {
-      console.group("[/] Loading stored beatmaps...");
-      const beatmap_ids = await beatmapsStorage.keys();
+      console.group("[/] Loading stored beatmaps metadata...");
+      const beatmap_ids = await beatmapsMetadataStorage.keys();
       console.info(`Got ${beatmap_ids.length} beatmap(s).`);
 
       if (beatmap_ids.length > 0) {
         for (const beatmap_id of beatmap_ids) {
-          const beatmap = await beatmapsStorage.getItem(beatmap_id);
-          console.info(`Loaded beatmap "${beatmap_id}" !`);
+          await loadBeatmapToMemory(beatmap_id);
+          console.info(`Loaded metadata from beatmap "${beatmap_id}" !`);
         }
 
         console.info("Loaded all the beatmaps !");

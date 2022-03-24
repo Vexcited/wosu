@@ -1,28 +1,50 @@
-import type { Beatmap } from "@/stores/beatmaps";
+import type {
+  BeatmapMetadata,
+  BeatmapFiles
+} from "@/stores/beatmaps";
 
 import JSZip from "jszip";
+import {
+  useBeatmapsStore,
+  beatmapsFilesStorage,
+  beatmapsMetadataStorage
+} from "@/stores/beatmaps";
+import { arrayBufferToString } from "@/utils/encoding";
 
 const beatmapHandler = async (oszFile: ArrayBuffer) => {
   const zip = new JSZip();
 
-  // Get metadata of the beatmap.
-  const beatmap_data = await zip.loadAsync(oszFile);
-  const beatmap_object: Beatmap = {
+  // Load function to add beatmap metadata to memory.
+  const loadBeatmapToMemory = useBeatmapsStore.getState().loadBeatmap;
+
+  /** Extracted `.osz` file. */
+  const osz = await zip.loadAsync(oszFile);
+
+  const beatmap_metadata: BeatmapMetadata = {
     set_id: "",
     publisher: "",
-    levels: [],
+    levels: []
+  };
+
+  const beatmap_files: BeatmapFiles = {
+    set_id: "",
     files: {}
   };
 
-  for (const [path, data] of Object.entries(beatmap_data.files)) {
+  for (const [path, data] of Object.entries(osz.files)) {
+    /**
+     * Add the file to `beatmap_files` to be 
+     * saved later in local files storage.
+     */
     const file = await data.async("arraybuffer");
-    beatmap_object.files[path] = file;
+    beatmap_files.files[path] = file;
+    console.info(`[beatmap_files] + "${path}"`);
 
     if (path.endsWith(".osu")) {
-      console.log("Parsing `.osu` file.");
-
-      const osu_data = await data.async("text");
-      const osu_level_object: Beatmap["levels"][0] = {
+      // Read every `.osu` file as text
+      // to extract metadataa from them.
+      const osu_data = arrayBufferToString(file);
+      const beatmap_level: BeatmapMetadata["levels"][0] = {
         id: "",
         name: "",
         path
@@ -34,27 +56,41 @@ const beatmapHandler = async (oszFile: ArrayBuffer) => {
 
         switch (key) {
         case "BeatmapSetID":
-          beatmap_object.set_id = value;
+          beatmap_metadata.set_id = value;
+          beatmap_files.set_id = value;
           break;
         case "BeatmapID":
-          osu_level_object.id = value;
+          beatmap_level.id = value;
           break;
         case "Version":
-          osu_level_object.name = value;
+          beatmap_level.name = value;
           break;
         case "Creator":
-          beatmap_object.publisher = value;
+          beatmap_metadata.publisher = value;
           break;
         }
       }
 
       // Add the level to the beatmap.
-      beatmap_object.levels.push(osu_level_object);
-      console.info("Finished parsing `.osu` file.");
+      beatmap_metadata.levels.push(beatmap_level);
+      console.info(
+        `[beatmap_metadata] + Added a difficulty "${beatmap_level.name}".`
+      );
     }
   }
 
-  console.log(beatmap_object);
+  console.info("Finished to extract `.osz` file. Saving the files to local storage...");
+
+  await beatmapsFilesStorage.setItem(beatmap_files.set_id, beatmap_files);
+
+  console.info("Files saved ! Now saving the metadata...");
+
+  await beatmapsMetadataStorage.setItem(beatmap_metadata.set_id, beatmap_metadata);
+
+  console.info("Metadata saved ! Saving them to memory...");
+
+  await loadBeatmapToMemory(beatmap_metadata.set_id);
+  console.info("Finished importing.");
 };
 
 const importBeatmapHandler = async (evt: Event) => {
