@@ -9,8 +9,19 @@ export interface BeatmapMetadata extends Beatmap {
   publisher: string;
   levels: {
     id: string;
-    name: string;
-    path: string;
+    
+    beatmap_name: {
+      original: string;
+      romanized: string;
+    };
+
+    beatmap_artist: {
+      original: string;
+      romanized: string;
+    };
+
+    difficulty_name: string;
+    beatmap_path: string;
   }[];
 }
 

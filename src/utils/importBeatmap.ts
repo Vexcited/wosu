@@ -20,12 +20,14 @@ const beatmapHandler = async (oszFile: ArrayBuffer) => {
   /** Extracted `.osz` file. */
   const osz = await zip.loadAsync(oszFile);
 
+  /** Default metadata. */
   const beatmap_metadata: BeatmapMetadata = {
     set_id: "",
     publisher: "",
     levels: []
   };
 
+  /** Default files. */
   const beatmap_files: BeatmapFiles = {
     set_id: "",
     files: {}
@@ -42,12 +44,22 @@ const beatmapHandler = async (oszFile: ArrayBuffer) => {
 
     if (path.endsWith(".osu")) {
       // Read every `.osu` file as text
-      // to extract metadataa from them.
+      // to extract metadata from them.
       const osu_data = arrayBufferToString(file);
+
+      /** Default metadata. */
       const beatmap_level: BeatmapMetadata["levels"][0] = {
         id: "",
-        name: "",
-        path
+        beatmap_artist: {
+          original: "",
+          romanized: ""
+        },
+        beatmap_name: {
+          original: "",
+          romanized: ""
+        },
+        difficulty_name: "",
+        beatmap_path: path
       };
 
       const lines = osu_data.split("\n");
@@ -63,7 +75,19 @@ const beatmapHandler = async (oszFile: ArrayBuffer) => {
           beatmap_level.id = value;
           break;
         case "Version":
-          beatmap_level.name = value;
+          beatmap_level.difficulty_name = value;
+          break;
+        case "ArtistUnicode":
+          beatmap_level.beatmap_artist.original = value;
+          break;
+        case "Artist":
+          beatmap_level.beatmap_artist.romanized = value;
+          break;
+        case "TitleUnicode":
+          beatmap_level.beatmap_name.original = value;
+          break;
+        case "Title":
+          beatmap_level.beatmap_name.romanized = value;
           break;
         case "Creator":
           beatmap_metadata.publisher = value;
@@ -74,20 +98,24 @@ const beatmapHandler = async (oszFile: ArrayBuffer) => {
       // Add the level to the beatmap.
       beatmap_metadata.levels.push(beatmap_level);
       console.info(
-        `[beatmap_metadata] + Added a difficulty "${beatmap_level.name}".`
+        `[beatmap_metadata] + Added a difficulty "${beatmap_level.difficulty_name}".`
       );
     }
   }
 
-  console.info("Finished to extract `.osz` file. Saving the files to local storage...");
+  console.info(
+    "[localForage/files] Finished to extract `.osz` file. Saving files to local storage..."
+  );
 
   await beatmapsFilesStorage.setItem(beatmap_files.set_id, beatmap_files);
-
-  console.info("Files saved ! Now saving the metadata...");
+  console.info(
+    "[localForage/metadata] Files saved ! Now saving the metadata..."
+  );
 
   await beatmapsMetadataStorage.setItem(beatmap_metadata.set_id, beatmap_metadata);
-
-  console.info("Metadata saved ! Saving them to memory...");
+  console.info(
+    "[zustand] Metadata saved ! Saving them to memory..."
+  );
 
   await loadBeatmapToMemory(beatmap_metadata.set_id);
   console.info("Finished importing.");
