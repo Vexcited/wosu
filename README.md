@@ -1,4 +1,4 @@
-# osu-web-player
+# wosu! (web osu!)
 
 > A web osu! beatmap player with multiplayer.
 
@@ -27,4 +27,4 @@ yarn serve
 API handler is an Express app used with Vite using `vite-plugin-mix`.
 It is only used to handle multiplayer matchs' states.
 
-#### `/api/matchs`
+#### GET `/api/matchs`
