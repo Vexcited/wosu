@@ -7,7 +7,7 @@ export default defineConfig({
   plugins: [
     /** Add backend handler to Vite. */
     mix({
-      handler: "./api/index.ts",
+      handler: "./api-handler/index.ts",
       adapter: vercelAdapter()
     }),
     react()
