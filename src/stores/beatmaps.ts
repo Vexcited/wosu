@@ -31,13 +31,20 @@ export interface BeatmapFiles extends Beatmap {
   };
 }
 
-type BeatmapsStore = {
+interface BeatmapsStore {
   /** List all of the beatmaps' metadata. */
   beatmaps: BeatmapMetadata[];
   /** Load a beatmap metadata to memory. */
   loadBeatmap: (set_id: string) => Promise<void>;
   /** Remove beatmap from memory. */
   deleteBeatmap: (set_id: string) => Promise<void>;
+
+  /**
+   * Whether the beatmaps have been loaded
+   * into this local store (in main.tsx' useEffect).
+   */
+  finishedLoading: boolean;
+  setFinishedLoading: (state: boolean) => void;
 };
 
 // In this store, we only store metadatas of beatmaps.
@@ -56,20 +63,24 @@ export const beatmapsFilesStorage = localforage.createInstance({
 export const useBeatmapsStore = create<BeatmapsStore>((set, get) => ({
   beatmaps: [],
   loadBeatmap: async (set_id) => {
-    console.info(`[stores/beatmaps] Loaded beatmap metadata "${set_id}" to memory.`);
+    console.group(`[stores/beatmaps] Loading beatmap metadata "${set_id}" to memory.`);
 
     // Get the beatmap from storage.
     const metadata: BeatmapMetadata | null = await beatmapsMetadataStorage.getItem(set_id);
 
     if (!metadata) return console.error(
-      `[stores/beatmaps] Error while loading beatmap "${set_id}": metadata is null.`
-    );
+      "[Error] `metadata` is null."
+    ); else console.info("[BeatmapMetadata]", metadata);
 
+    // Update the stored beatmaps list.
     const beatmaps = get().beatmaps;
     beatmaps.push(metadata);
     
-    console.info(`[stores/beatmaps] Loaded "${set_id}" !`);
+    // Sync with beatmaps in store.
     set(() => ({ beatmaps }));
+
+    console.info(`✓ Loaded beatmap(s) from set "${set_id}" !`);
+    console.groupEnd();
   },
   deleteBeatmap: async (set_id: string) => {
     console.info(`[stores/beatmaps] Removed beatmap metadata of "${set_id}" from memory.`);
@@ -77,5 +88,8 @@ export const useBeatmapsStore = create<BeatmapsStore>((set, get) => ({
     set(() => ({
       beatmaps: get().beatmaps.filter(beatmap => beatmap.set_id !== set_id)
     }));
-  }
+  },
+
+  finishedLoading: false,
+  setFinishedLoading: (state) => set(({ finishedLoading: state }))
 }));

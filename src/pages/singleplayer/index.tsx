@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { useState } from "react";
+import { useState, Fragment } from "react";
 
 import { useBeatmapsStore } from "@/stores/beatmaps";
 import { importBeatmap } from "@/utils/importBeatmap";
@@ -12,6 +12,7 @@ export default function SinglePlayerMenuPage () {
 
   const importBeatmapHandler = () => {
     setImporting(true);
+
     importBeatmap(() => {
       setImporting(false);
     });
@@ -46,21 +47,23 @@ export default function SinglePlayerMenuPage () {
 
       {beatmaps.length > 0 &&
         <div className="py-[35vh] flex flex-col flex-end bg-opacity-40 w-screen items-end">
-          {beatmaps.map(beatmap => <>
+          {beatmaps.map(beatmap => <Fragment key={beatmap.set_id}>
             {beatmap.levels.map(level =>
               <div
                 onClick={() => {
                   setSelectedBeatmapSetId(beatmap.set_id);
                   setSelectedBeatmapId(level.id);
                 }}
+
                 className={`px-6 py-2 bg-opacity-80 w-3/5 ${beatmap.set_id === selectedBeatmapSetId ? "bg-purple-600" : "bg-zinc-900"} hover:bg-purple-400`}
+
                 key={level.id}
               >
                 <h2>{level.beatmap_name.romanized}</h2>
                 <span>{level.beatmap_artist.romanized} - Difficulty: {level.difficulty_name}</span>
               </div>
             )}
-          </>
+          </Fragment>
           )}
         </div>
       }

@@ -3,8 +3,9 @@ import "@fontsource/exo-2/latin-400.css";
 import "@fontsource/exo-2/latin-500.css";
 import "@/styles/globals.css";
 
-import React from "react";
+import React, { useEffect } from "react";
 import ReactDOM from "react-dom";
+import shallow from "zustand/shallow";
 
 import {
   useBeatmapsStore,
@@ -42,26 +43,47 @@ function AppRouter () {
 
 /** Effects and triggers on first load. */
 function App () {
-  const loadBeatmapToMemory = useBeatmapsStore(state => state.loadBeatmap);
+  const {
+    loadBeatmap: loadBeatmapToMemory,
+    finishedLoading,
+    setFinishedLoading
+  } = useBeatmapsStore(state => ({
+    loadBeatmap: state.loadBeatmap,
+    finishedLoading: state.finishedLoading,
+    setFinishedLoading: state.setFinishedLoading
+  }), shallow);
 
-  React.useEffect(() => {
+  useEffect(() => {
     (async () => {
       console.group("[/] Loading stored beatmaps metadata...");
+      setFinishedLoading(false);
+
       const beatmap_ids = await beatmapsMetadataStorage.keys();
       console.info(`Got ${beatmap_ids.length} beatmap(s).`);
 
       if (beatmap_ids.length > 0) {
         for (const beatmap_id of beatmap_ids) {
           await loadBeatmapToMemory(beatmap_id);
-          console.info(`Loaded metadata from beatmap "${beatmap_id}" !`);
         }
 
-        console.info("Loaded all the beatmaps !");
+        console.info("✓ Loaded all the beatmaps !");
       }
-      else console.info("No beatmaps found, skipping.");
+      else console.info("No beatmap(s) found, skipping.");
+
+      setFinishedLoading(true);
       console.groupEnd();
     })();
   }, []);
+
+  // Check whether the beatmaps are loaded.
+  if (!finishedLoading) return (
+    <div className="
+      h-screen w-screen fixed
+      flex justify-center items-center
+    ">
+      <p>Loading your stored beatmaps into memory...</p>
+    </div>
+  )
 
   return (
     <AppRouter />
