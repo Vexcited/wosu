@@ -16,3 +16,4 @@ build
 *.local
 .DS_Store
 *.sw?
+.vercel*

@@ -7,7 +7,7 @@ export default defineConfig({
   plugins: [
     /** Add backend handler to Vite. */
     mix({
-      handler: "./api-handler/index.ts",
+      handler: resolve(__dirname, "src/api/index.ts"),
       adapter: vercelAdapter()
     }),
     react()
@@ -16,5 +16,5 @@ export default defineConfig({
     alias: {
       "@": resolve(__dirname, "src")
     }
-  },
+  }
 });
